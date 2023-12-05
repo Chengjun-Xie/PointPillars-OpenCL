@@ -53,9 +53,9 @@ struct AnchorGridConfig {
 struct PointPillarsConfig {
   std::string pfe_model_file{"pfe.onnx"};
   std::string rpn_model_file{"rpn.onnx"};
-  std::string opencl_kernel_path{"kernel/"};
-  std::string pfe_cache_path{"kernel/"};
-  std::string rpn_cache_path{"kernel/"};
+  std::string opencl_kernel_path{"kernels/"};
+  std::string pfe_cache_path{"kernels/"};
+  std::string rpn_cache_path{"kernels/"};
   float min_x_range{0.f};      // defines the area covered by the algorithm
   float max_x_range{69.12f};   // defines the area covered by the algorithm
   float min_y_range{-39.68f};  // defines the area covered by the algorithm
