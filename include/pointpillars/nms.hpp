@@ -58,7 +58,8 @@ class NMS {
   int threads_for_opencl_ = 64;
 
   // for opencl
-  bool OpenCLInit() void MakeOCLKernel();
+  bool OpenCLInit();
+  void MakeOCLKernel();
 
  public:
   /**

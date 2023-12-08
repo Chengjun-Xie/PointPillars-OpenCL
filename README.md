@@ -1,4 +1,4 @@
-# Lidar Object Detection framework PointPillars using OpenCL and OpenVINO
+# Lidar Object Detection framework PointPillars using OpenCL and OpenVINO [WIP]
 The repository is the implementation of  `Lidar Object Detection framework PointPillars` using OpenCL and OpenVINO, similar to [LidarObjectDetection-PointPillars based on SYCL in OneAPI-samples](https://github.com/oneapi-src/oneAPI-samples/tree/master/AI-and-Analytics/End-to-end-Workloads/LidarObjectDetection-PointPillars). This implementation is ideal for Intel devices.
 
 ![Overview](data/point_pillars_overview.png)

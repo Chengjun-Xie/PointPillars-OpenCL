@@ -145,10 +145,8 @@ void NMS::ParallelNMSOpenCL(const int host_filter_count,
   errCL = command_queue_->enqueueNDRangeKernel(
       kernel, cl::NullRange, global_ndrange, local_ndrange, NULL, &eventCL);
   if (CL_SUCCESS != errCL) {
-    GS_ERROR(
-        "NMS::ParallelNMSOpenCL enqueueNDRangeKernel nms_rotated_gpu_kernel "
-        "fail: %d",
-        errCL);
+    std::cout <<  "NMS::ParallelNMSOpenCL enqueueNDRangeKernel nms_rotated_gpu_kernel fail: "
+        << errCL << std::endl;
   }
 
   eventCL.wait();
@@ -159,8 +157,7 @@ void NMS::ParallelNMSOpenCL(const int host_filter_count,
       host_filter_count * col_blocks * sizeof(unsigned long long),
       static_cast<void *>(host_mask.data()), NULL, NULL);
   if (CL_SUCCESS != errCL) {
-    GS_ERROR("NMS::ParallelNMSOpenCL enqueueReadBuffer dev_mask fail: %d",
-             errCL);
+    std::cout << "NMS::ParallelNMSOpenCL enqueueReadBuffer dev_mask fail: " << errCL << std::endl;
   }
 
   std::vector<unsigned long long> remv(col_blocks);

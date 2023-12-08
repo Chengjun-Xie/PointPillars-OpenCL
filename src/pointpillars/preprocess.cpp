@@ -239,8 +239,8 @@ void PreProcess::DoPreProcess(
       point_total += item;
     }
 
-    GS_INFO("PreProcess::DoPreProcess total point cloud num is %d",
-            point_total);
+    std::cout << "PreProcess::DoPreProcess total point cloud num is %d" << 
+            point_total << std::endl;;
   }
 
   // Check which pillars contain points and mark them for use during feature
