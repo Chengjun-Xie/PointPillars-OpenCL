@@ -60,10 +60,10 @@ int main(int argc, char *argv[]) {
     ("help", "produce help message")
     ("pfe_model", boost::program_options::value<std::string>()->default_value("pfe.onnx"), "PFE model file path (.onnx, .xml)")
     ("rpn_model", boost::program_options::value<std::string>()->default_value("rpn.onnx"), "RPN model file path (.onnx, .xml)")
-    ("data", boost::program_options::value<std::string>()->default_value("./data"), "data path")
+    ("data", boost::program_options::value<std::string>()->default_value("./data"), "data path");
       // clang-format on
 
-      boost::program_options::variables_map vm;
+  boost::program_options::variables_map vm;
   boost::program_options::store(
       boost::program_options::parse_command_line(argc, argv, desc), vm);
   boost::program_options::notify(vm);
@@ -74,12 +74,6 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  if (vm.count("list")) {
-    devicemanager::GetDevices();
-    return 1;
-  }
-
-  std::vector<sycl::info::device_type> execution_devices;
   // Point Pillars initialization
   pointpillars::PointPillarsConfig config;
   std::vector<pointpillars::ObjectDetection> object_detections;
@@ -101,7 +95,8 @@ int main(int argc, char *argv[]) {
 
   // Run PointPillars
   // setup PointPillars
-  pointpillars::PointPillars point_pillars(0.5f, 0.5f, config);
+  float *score_threshold = new float{0.5f};
+  pointpillars::PointPillars point_pillars(score_threshold, 0.5f, config);
   const auto start_time = std::chrono::high_resolution_clock::now();
 
   // run PointPillars
@@ -123,7 +118,7 @@ int main(int argc, char *argv[]) {
   std::cout << object_detections.size() << " cars detected\n";
   for (auto const &detection : object_detections) {
     std::cout << config.classes[detection.class_id]
-              << ": Probability = " << detection class_probabilities[0]
+              << ": Probability = " << detection.class_probabilities[0]
               << " Position = (" << detection.x << ", " << detection.y << ", "
               << detection.z << ") Length = " << detection.length
               << " Width = " << detection.width << "\n";

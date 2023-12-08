@@ -155,7 +155,7 @@ class PointPillars {
    * @param[in] nms_overlap_threshold IOU threshold for NMS
    * @param[in] config PointPillars net configuration file
    */
-  PointPillars(const float *score_threshold, const float *nms_overlap_threshold,
+  PointPillars(const float *score_threshold, const float nms_overlap_threshold,
                const PointPillarsConfig &config);
 
   ~PointPillars();

@@ -14,20 +14,23 @@ endif()
 
 project ("pointpillars-opencl")
 
+add_definitions(-DOCLDEBUG)
+
 # include opencl
 find_package(OpenCL REQUIRED)
 include_directories(${OpenCL_INCLUDE_DIRS})
 
 # include openvino
 find_package(OpenVINO REQUIRED)
-include_directories(${OpenVINO_INCLUDE_DIRS})
+include_directories(${InferenceEngine_INCLUDE_DIRS})
+
 
 # include opencv
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 # include boost
-find_package(Boost REQUIRED COMPONENTS system filesystem thread)
+find_package(Boost REQUIRED COMPONENTS system filesystem thread program_options)
 include_directories(${Boost_INCLUDE_DIRS})
 
 
@@ -36,14 +39,15 @@ aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/src SOURCE_LIST)
 
 add_executable(${PROJECT_NAME} main.cpp ${SOURCE_LIST})
 target_link_libraries(${PROJECT_NAME} 
-  ${OpenCL_LIBRARY} 
-  ${OpenVINO_LIBRARY} 
+  ${OpenCL_LIBS} 
+  ${InferenceEngine_LIBS} 
   ${OpenCV_LIBS}
   ${Boost_LIBRARIES}
+  openvino::runtime
 )
 
 configure_file(${CMAKE_SOURCE_DIR}/data/example.pcd ${CMAKE_CURRENT_BINARY_DIR}/example.pcd COPYONLY)
-configure_file(${CMAKE_SOURCE_DIR}/model/pfe.onnx ${CMAKE_CURRENT_BINARY_DIR}/pfe.pcd COPYONLY)
-configure_file(${CMAKE_SOURCE_DIR}/data/rpn.onnx ${CMAKE_CURRENT_BINARY_DIR}/rpn.pcd COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/model/pfe.onnx ${CMAKE_CURRENT_BINARY_DIR}/pfe.onnx COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/model/rpn.onnx ${CMAKE_CURRENT_BINARY_DIR}/rpn.onnx COPYONLY)
 
 

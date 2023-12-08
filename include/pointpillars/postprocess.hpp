@@ -130,11 +130,10 @@ class PostProcess {
       const cl::Buffer& dev_anchors_px, const cl::Buffer& dev_anchors_py,
       const cl::Buffer& dev_anchors_pz, const cl::Buffer& dev_anchors_dx,
       const cl::Buffer& dev_anchors_dy, const cl::Buffer& dev_anchors_dz,
-      const cl::Buffer& dev_anchors_ro, cl
-      : Buffer& dev_multiclass_score, cl::Buffer& dev_filtered_box,
-        cl::Buffer& dev_filtered_score, cl::Buffer& dev_filtered_dir,
-        cl::Buffer& dev_filtered_class_id, cl::Buffer& dev_box_for_nms,
-        cl::Buffer& dev_filter_count,
-        std::vector<ObjectDetection>& out_detection);
+      const cl::Buffer& dev_anchors_ro, cl::Buffer& dev_multiclass_score,
+      cl::Buffer& dev_filtered_box,  cl::Buffer& dev_filtered_score,
+      cl::Buffer& dev_filtered_dir,  cl::Buffer& dev_filtered_class_id,
+      cl::Buffer& dev_box_for_nms, cl::Buffer& dev_filter_count,
+      std::vector<ObjectDetection>& out_detection);
 };
 }  // namespace pointpillars

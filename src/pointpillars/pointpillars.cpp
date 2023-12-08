@@ -13,7 +13,7 @@ static constexpr auto INTEL_GPU_PLATFORM = "OpenCL HD Graphics";
 
 namespace pointpillars {
 PointPillars::PointPillars(const float *score_threshold,
-                           const float *nms_threshold,
+                           const float nms_threshold,
                            const PointPillarsConfig &config)
     : config_(config),
       score_threshold_(score_threshold),
