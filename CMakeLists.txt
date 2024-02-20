@@ -6,44 +6,40 @@ cmake_minimum_required (VERSION 3.8)
 set(CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 17)
 
-# Enable Hot Reload for MSVC compilers if supported.
-if (POLICY CMP0141)
-  cmake_policy(SET CMP0141 NEW)
-  set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
-endif()
-
 project ("pointpillars-opencl")
 
 add_definitions(-DOCLDEBUG)
 
-# include opencl
-find_package(OpenCL REQUIRED)
-include_directories(${OpenCL_INCLUDE_DIRS})
-
 # include openvino
 find_package(OpenVINO REQUIRED)
-include_directories(${InferenceEngine_INCLUDE_DIRS})
-
-
-# include opencv
-find_package(OpenCV REQUIRED)
-include_directories(${OpenCV_INCLUDE_DIRS})
 
 # include boost
 find_package(Boost REQUIRED COMPONENTS system filesystem thread program_options)
 include_directories(${Boost_INCLUDE_DIRS})
 
+# include opencl
+add_library(OPENCL_SO SHARED IMPORTED)
+set_property(TARGET OPENCL_SO PROPERTY IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/libs/libOpenCL.so.1)
 
+# build library for execution
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/)
-aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/src SOURCE_LIST)
-
-add_executable(${PROJECT_NAME} main.cpp ${SOURCE_LIST})
-target_link_libraries(${PROJECT_NAME} 
-  ${OpenCL_LIBS} 
-  ${InferenceEngine_LIBS} 
-  ${OpenCV_LIBS}
-  ${Boost_LIBRARIES}
+file(GLOB_RECURSE SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/*)
+add_library(${PROJECT_NAME}_LIB STATIC ${SRC_FILES})
+target_link_libraries(${PROJECT_NAME}_LIB
   openvino::runtime
+  OPENCL_SO
+)
+
+target_include_directories(${PROJECT_NAME}_LIB PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+add_executable(${PROJECT_NAME} main.cpp)
+
+target_link_libraries(${PROJECT_NAME} 
+  ${PROJECT_NAME}_LIB
+  Boost::filesystem
+  Boost::program_options
 )
 
 configure_file(${CMAKE_SOURCE_DIR}/data/example.pcd ${CMAKE_CURRENT_BINARY_DIR}/example.pcd COPYONLY)

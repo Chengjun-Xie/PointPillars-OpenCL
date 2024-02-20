@@ -51,7 +51,7 @@ PointPillars::PointPillars(const float *score_threshold,
       num_threads_(64),
       num_box_corners_(4),
       num_output_box_feature_(7),
-      opencl_kernel_path_{config.opencl_kernel_path} {
+      opencl_kernel_path_(config.opencl_kernel_path) {
   max_num_pillars_init_ = std::move(std::vector<int>(max_num_pillars_, 0));
   grid_size_init_ = std::move(std::vector<int>(grid_y_size_ * grid_x_size_, 0));
   num_anchor_init_ = std::move(std::vector<int>(num_anchor_, 0));
@@ -78,16 +78,16 @@ PointPillars::~PointPillars() {
 void PointPillars::InitComponents() {
   // Setup anchor grid
   AnchorGridConfig anchor_grid_config;
-  anchor_grid_config.min_x_range = config.min_x_range;
-  anchor_grid_config.max_x_range = config.max_x_range;
-  anchor_grid_config.min_y_range = config.min_y_range;
-  anchor_grid_config.max_y_range = config.max_y_range;
-  anchor_grid_config.min_z_range = config.min_z_range;
-  anchor_grid_config.max_z_range = config.max_z_range;
+  anchor_grid_config.min_x_range = config_.min_x_range;
+  anchor_grid_config.max_x_range = config_.max_x_range;
+  anchor_grid_config.min_y_range = config_.min_y_range;
+  anchor_grid_config.max_y_range = config_.max_y_range;
+  anchor_grid_config.min_z_range = config_.min_z_range;
+  anchor_grid_config.max_z_range = config_.max_z_range;
 
-  anchor_grid_config.x_stride = config.x_stride;
-  anchor_grid_config.y_stride = config.y_stride;
-  anchor_grid_config.anchors = config.anchors;
+  anchor_grid_config.x_stride = config_.x_stride;
+  anchor_grid_config.y_stride = config_.y_stride;
+  anchor_grid_config.anchors = config_.anchors;
   anchor_grid_config.rotations = {0.f, M_PI_2};
   anchor_grid_ptr_ =
       std::make_unique<AnchorGrid>(anchor_grid_config, opencl_kernel_path_,
@@ -275,7 +275,7 @@ void PointPillars::SetupRpnNetwork(bool resize_input) {
               << std::endl;
   }
 
-  if (outputs.size() != 5) {
+  if (outputs.size() != 3) {
     std::cout << "PointPillars::SetupRpnNetwork: outputs size error!!!"
               << std::endl;
   }
@@ -645,8 +645,13 @@ void PointPillars::PostProcessing(std::vector<ObjectDetection> &detections) {
   }
 
   postprocess_ptr_->DoPostProcess(
-      rpn_1_output_, rpn_2_output_, rpn_3_output_, dev_multiclass_score_,
-      dev_filtered_box_, dev_filtered_score_, dev_filtered_class_id_,
+      rpn_1_output_, rpn_2_output_, rpn_3_output_, dev_anchor_mask_,
+      anchor_grid_ptr_->dev_anchors_px_, anchor_grid_ptr_->dev_anchors_py_,
+      anchor_grid_ptr_->dev_anchors_pz_, anchor_grid_ptr_->dev_anchors_dx_,
+      anchor_grid_ptr_->dev_anchors_dy_, anchor_grid_ptr_->dev_anchors_dz_, 
+      anchor_grid_ptr_->dev_anchors_ro_, dev_multiclass_score_,
+      dev_filtered_box_, dev_filtered_score_,
+      dev_filtered_dir_, dev_filtered_class_id_,
       dev_box_for_nms_, dev_filter_count_, detections);
 
   const auto end_time = std::chrono::high_resolution_clock::now();

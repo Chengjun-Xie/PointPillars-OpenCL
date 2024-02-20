@@ -239,7 +239,7 @@ void PreProcess::DoPreProcess(
       point_total += item;
     }
 
-    std::cout << "PreProcess::DoPreProcess total point cloud num is %d" << 
+    std::cout << "PreProcess::DoPreProcess total point cloud num  " << 
             point_total << std::endl;;
   }
 

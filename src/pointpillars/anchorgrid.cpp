@@ -2,9 +2,6 @@
 
 #include <algorithm>
 
-#include "pointpillars/common.hpp"
-#include "pointpillars/scan.hpp"
-
 namespace pointpillars {
 
 AnchorGrid::AnchorGrid(AnchorGridConfig &config,
@@ -16,15 +13,23 @@ AnchorGrid::AnchorGrid(AnchorGridConfig &config,
       opencl_kernel_path_{opencl_kernel_path},
       context_(context),
       command_queue_(command_queue),
-      device_(device);
-dev_anchors_px_{nullptr}, dev_anchors_py_{nullptr}, dev_anchors_pz_{nullptr},
-    dev_anchors_dx_{nullptr}, dev_anchors_dy_{nullptr},
-    dev_anchors_dz_{nullptr}, dev_anchors_ro_{nullptr},
-    dev_anchors_rad_{nullptr}, host_anchors_px_{nullptr},
-    host_anchors_py_{nullptr}, host_anchors_pz_{nullptr},
-    host_anchors_dx_{nullptr}, host_anchors_dy_{nullptr},
-    host_anchors_dz_{nullptr}, host_anchors_ro_{nullptr},
-    host_anchors_rad_{nullptr} {
+      device_(device),
+      dev_anchors_px_(nullptr), 
+      dev_anchors_py_(nullptr),
+      dev_anchors_pz_(nullptr),
+      dev_anchors_dx_(nullptr), 
+      dev_anchors_dy_(nullptr),
+      dev_anchors_dz_(nullptr), 
+      dev_anchors_ro_(nullptr),
+      dev_anchors_rad_(nullptr),
+      host_anchors_px_(nullptr),
+      host_anchors_py_(nullptr),
+      host_anchors_pz_(nullptr),
+      host_anchors_dx_(nullptr),
+      host_anchors_dy_(nullptr),
+      host_anchors_dz_(nullptr),
+      host_anchors_ro_(nullptr),
+      host_anchors_rad_(nullptr) {
   mc_ = config_.anchors.size();
   mr_ = config_.rotations.size();
 
@@ -271,12 +276,12 @@ void AnchorGrid::MoveAnchorsToDevice() {
   ClearHostMemory();
 }
 
-void AnchorGrid::CreateAnchorMask(int *dev_pillar_map, const int pillar_map_w,
+void AnchorGrid::CreateAnchorMask(const cl::Buffer& dev_pillar_map, const int pillar_map_w,
                                   const int pillar_map_h,
                                   const float pillar_size_x,
                                   const float pillar_size_y,
-                                  int *dev_anchor_mask,
-                                  int *dev_pillar_workspace) {
+                                  const cl::Buffer& dev_anchor_mask,
+                                  const cl::Buffer& dev_pillar_workspace) {
   // Calculate the cumulative sum over the 2D grid dev_pillar_map in both X and
   // Y
 
@@ -296,17 +301,60 @@ void AnchorGrid::CreateAnchorMask(int *dev_pillar_map, const int pillar_map_w,
               mr_, mh_, mw_);
 }
 
-void AnchorGrid::MaskAnchors(const float *dev_anchors_px,
-                             const float *dev_anchors_py,
-                             const int *dev_pillar_map, int *dev_anchor_mask,
-                             const float *dev_anchors_rad,
+void AnchorGrid::ScanX(const cl::Buffer& dev_input, 
+                      const cl::Buffer& dev_output,
+                      const int w, const int h, const int n){
+  int idx = 0;
+  std::string kernel_name{"ScanXKernel"};
+  auto kernel = name_2_kernel_[kernel_name];
+  cl::LocalSpaceArg local_mem_arg = cl::Local(sizeof(int) * n);
+  kernel.setArg(idx++, dev_input);
+  kernel.setArg(idx++, dev_output);
+  kernel.setArg(idx++, n);
+  kernel.setArg(idx++, local_mem_arg);
+  auto global_ndrange = cl::NDRange(w * h / 2);
+  auto local_ndrange = cl::NDRange(w / 2);
+  errCL = command_queue_->enqueueNDRangeKernel(
+    kernel, cl::NullRange, global_ndrange, local_ndrange, NULL, &eventCL);
+  if (CL_SUCCESS != errCL) {
+    std::cout << "AnchorGrid::ScanX enqueueNDRangeKernel "
+                 "ScanXKernel fail: "
+              << errCL << std::endl;
+  }
+  eventCL.wait();
+}
+
+void AnchorGrid::ScanY(const cl::Buffer& dev_input, 
+                      const cl::Buffer& dev_output,
+                      const int w, const int h, const int n){
+  int idx = 0;
+  std::string kernel_name{"ScanYKernel"};
+  auto kernel = name_2_kernel_[kernel_name];
+  cl::LocalSpaceArg local_mem_arg = cl::Local(sizeof(int) * n);
+  kernel.setArg(idx++, dev_input);
+  kernel.setArg(idx++, dev_output);
+  kernel.setArg(idx++, n);
+  kernel.setArg(idx++, local_mem_arg);
+  auto global_ndrange = cl::NDRange(w * h / 2);
+  auto local_ndrange = cl::NDRange(h / 2);
+  errCL = command_queue_->enqueueNDRangeKernel(
+    kernel, cl::NullRange, global_ndrange, local_ndrange, NULL, &eventCL);
+  if (CL_SUCCESS != errCL) {
+    std::cout << "AnchorGrid::ScanY enqueueNDRangeKernel "
+                 "ScanYKernel fail: "
+              << errCL << std::endl;
+  }
+  eventCL.wait();
+}
+
+void AnchorGrid::MaskAnchors(const cl::Buffer& dev_anchors_px, const cl::Buffer& dev_anchors_py,
+                             const cl::Buffer& dev_pillar_map, const cl::Buffer& dev_anchor_mask,
+                             const cl::Buffer& dev_anchors_rad,
                              const float min_x_range, const float min_y_range,
                              const float pillar_x_size,
                              const float pillar_y_size, const int grid_x_size,
                              const int grid_y_size, const int C, const int R,
                              const int H, const int W) {
-  cl::Event eventCL;
-  cl_int errCL;
   int idx = 0;
   std::string kernel_name{"MaskAnchorsSimpleKernel"};
   auto kernel = name_2_kernel_[kernel_name];
